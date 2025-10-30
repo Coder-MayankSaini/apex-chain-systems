@@ -10,6 +10,7 @@ import Signup from "./pages/Signup";
 import Dashboard from "./pages/Dashboard";
 import SupplyChain from "./pages/SupplyChain";
 import Analytics from "./pages/Analytics";
+import Authenticate from "./pages/Authenticate";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/supply-chain" element={<SupplyChain />} />
             <Route path="/analytics" element={<Analytics />} />
+            <Route path="/authenticate" element={<Authenticate />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

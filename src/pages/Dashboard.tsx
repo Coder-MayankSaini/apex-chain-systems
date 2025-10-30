@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import IssueTicket from "@/components/IssueTicket";
 import { 
   LayoutDashboard, 
   Truck, 
@@ -14,13 +16,15 @@ import {
   Package, 
   CheckCircle2, 
   Clock,
-  AlertCircle 
+  AlertCircle,
+  QrCode 
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showIssueTicket, setShowIssueTicket] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -217,7 +221,11 @@ const Dashboard = () => {
                   <Shield className="h-4 w-4 mr-2" />
                   Verify Product
                 </Button>
-                <Button className="w-full justify-start font-heading" variant="outline">
+                <Button 
+                  className="w-full justify-start font-heading" 
+                  variant="outline"
+                  onClick={() => setShowIssueTicket(true)}
+                >
                   <Ticket className="h-4 w-4 mr-2" />
                   Issue Ticket
                 </Button>
@@ -228,6 +236,14 @@ const Dashboard = () => {
                 >
                   <Package className="h-4 w-4 mr-2" />
                   Add Product
+                </Button>
+                <Button 
+                  className="w-full justify-start font-heading" 
+                  variant="outline"
+                  onClick={() => navigate("/authenticate")}
+                >
+                  <QrCode className="h-4 w-4 mr-2" />
+                  Public Verify
                 </Button>
               </CardContent>
             </Card>
@@ -269,6 +285,16 @@ const Dashboard = () => {
           </Card>
         </div>
       </main>
+
+      {/* Issue Ticket Dialog */}
+      <Dialog open={showIssueTicket} onOpenChange={setShowIssueTicket}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="font-heading text-xl">ISSUE TRACKING</DialogTitle>
+          </DialogHeader>
+          <IssueTicket />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
