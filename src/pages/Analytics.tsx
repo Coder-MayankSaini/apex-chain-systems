@@ -15,7 +15,7 @@ const Analytics = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* F1-themed header */}
-      <div className="bg-speed-gradient animate-speed-slide border-b">
+      <div className="bg-speed-gradient border-b">
         <div className="container mx-auto px-4 py-6">
           <div className="flex items-center justify-between">
             <div>
