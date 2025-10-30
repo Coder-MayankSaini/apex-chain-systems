@@ -17,12 +17,8 @@ import {
   CheckCircle2, 
   Clock,
   AlertCircle,
-<<<<<<< HEAD
-  QrCode 
-=======
   QrCode,
   Search 
->>>>>>> 5534f50e146b09b82280452e28755909134377a6
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -214,48 +210,6 @@ const Dashboard = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-<<<<<<< HEAD
-                <Button 
-                  className="w-full justify-start font-heading" 
-                  variant="outline"
-                  onClick={() => navigate("/supply-chain")}
-                >
-                  <Truck className="h-4 w-4 mr-2" />
-                  Track Shipment
-                </Button>
-                <Button 
-                  className="w-full justify-start font-heading" 
-                  variant="outline"
-                  onClick={() => navigate("/supply-chain")}
-                >
-                  <Shield className="h-4 w-4 mr-2" />
-                  Verify Product
-                </Button>
-                <Button 
-                  className="w-full justify-start font-heading" 
-                  variant="outline"
-                  onClick={() => setShowIssueTicket(true)}
-                >
-                  <Ticket className="h-4 w-4 mr-2" />
-                  Issue Ticket
-                </Button>
-                <Button 
-                  className="w-full justify-start font-heading" 
-                  variant="outline"
-                  onClick={() => navigate("/supply-chain")}
-                >
-                  <Package className="h-4 w-4 mr-2" />
-                  Add Product
-                </Button>
-                <Button 
-                  className="w-full justify-start font-heading" 
-                  variant="outline"
-                  onClick={() => navigate("/authenticate")}
-                >
-                  <QrCode className="h-4 w-4 mr-2" />
-                  Public Verify
-                </Button>
-=======
                 {userMetadata?.brand_type === "scanner" ? (
                   // Scanner Account Actions
                   <>
@@ -311,7 +265,11 @@ const Dashboard = () => {
                       <Shield className="h-4 w-4 mr-2" />
                       Verify Product
                     </Button>
-                    <Button className="w-full justify-start font-heading" variant="outline">
+                    <Button 
+                      className="w-full justify-start font-heading" 
+                      variant="outline"
+                      onClick={() => setShowIssueTicket(true)}
+                    >
                       <Ticket className="h-4 w-4 mr-2" />
                       Issue Ticket
                     </Button>
@@ -323,9 +281,16 @@ const Dashboard = () => {
                       <Package className="h-4 w-4 mr-2" />
                       Add Product
                     </Button>
+                    <Button 
+                      className="w-full justify-start font-heading" 
+                      variant="outline"
+                      onClick={() => navigate("/authenticate")}
+                    >
+                      <QrCode className="h-4 w-4 mr-2" />
+                      Public Verify
+                    </Button>
                   </>
                 )}
->>>>>>> 5534f50e146b09b82280452e28755909134377a6
               </CardContent>
             </Card>
           </div>
