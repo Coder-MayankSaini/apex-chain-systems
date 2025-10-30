@@ -18,7 +18,9 @@ import {
   LogOut,
   ArrowRight,
   Loader2,
-  Shield
+  Shield,
+  Upload,
+  X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useWeb3 } from "@/hooks/useWeb3";
@@ -47,6 +49,8 @@ const SupplyChain = () => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [productImage, setProductImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { account, contract } = useWeb3();
@@ -90,6 +94,18 @@ const SupplyChain = () => {
     }
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setProductImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleAddProduct = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
@@ -100,6 +116,32 @@ const SupplyChain = () => {
       const productId = formData.get("product_id") as string;
       const authenticityHash = crypto.randomUUID();
       let blockchainTokenId = null;
+      let imageUrl = null;
+
+      // Upload image if provided
+      if (productImage) {
+        const fileExt = productImage.name.split('.').pop();
+        const fileName = `${productId}-${Date.now()}.${fileExt}`;
+        const filePath = `product-images/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(filePath, productImage);
+
+        if (!uploadError) {
+          const { data: { publicUrl } } = supabase.storage
+            .from('products')
+            .getPublicUrl(filePath);
+          imageUrl = publicUrl;
+        } else {
+          console.error('Image upload error:', uploadError);
+          toast({
+            title: "Image Upload Warning",
+            description: "Product registered but image upload failed",
+            variant: "destructive",
+          });
+        }
+      }
 
       // If wallet is connected and contract is available, register on blockchain
       if (account && contract) {
@@ -139,6 +181,7 @@ const SupplyChain = () => {
         blockchain_token_id: blockchainTokenId,
         brand_id: user?.id,
         status: "manufactured" as const,
+        image_url: imageUrl,
       };
 
       const { error } = await supabase.from("products").insert([productData]);
@@ -153,6 +196,8 @@ const SupplyChain = () => {
       });
 
       setIsAddDialogOpen(false);
+      setProductImage(null);
+      setImagePreview(null);
       loadProducts();
     } catch (error: any) {
       console.error("Product registration error:", error);
@@ -339,6 +384,57 @@ const SupplyChain = () => {
                             defaultValue={account || ""}
                             className="font-mono"
                           />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="product_image" className="font-heading">
+                            Product Image (Optional)
+                          </Label>
+                          <div className="flex flex-col gap-2">
+                            {imagePreview ? (
+                              <div className="relative w-full">
+                                <img 
+                                  src={imagePreview} 
+                                  alt="Product preview" 
+                                  className="w-full h-48 object-cover rounded-lg border border-border"
+                                />
+                                <Button
+                                  type="button"
+                                  size="sm"
+                                  variant="destructive"
+                                  className="absolute top-2 right-2"
+                                  onClick={() => {
+                                    setProductImage(null);
+                                    setImagePreview(null);
+                                  }}
+                                >
+                                  <X className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ) : (
+                              <label htmlFor="product_image" className="cursor-pointer">
+                                <div className="border-2 border-dashed border-border rounded-lg p-6 hover:border-primary/50 transition-colors">
+                                  <div className="flex flex-col items-center gap-2">
+                                    <Upload className="h-8 w-8 text-muted-foreground" />
+                                    <span className="text-sm font-mono text-muted-foreground">
+                                      Click to upload product image
+                                    </span>
+                                    <span className="text-xs text-muted-foreground">
+                                      JPG, PNG, WEBP up to 5MB
+                                    </span>
+                                  </div>
+                                </div>
+                              </label>
+                            )}
+                            <input
+                              id="product_image"
+                              name="product_image"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleImageChange}
+                              className="hidden"
+                            />
+                          </div>
                         </div>
 
                         {!account && (

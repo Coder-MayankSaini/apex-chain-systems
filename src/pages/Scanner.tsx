@@ -17,7 +17,9 @@ import {
   CheckCircle,
   XCircle,
   History,
-  ArrowRight
+  ArrowRight,
+  Camera,
+  Upload
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -54,6 +56,8 @@ const Scanner = () => {
   const [scanning, setScanning] = useState(false);
   const [scannedProduct, setScannedProduct] = useState<Product | null>(null);
   const [trackingEvents, setTrackingEvents] = useState<TrackingEvent[]>([]);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -78,12 +82,39 @@ const Scanner = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  const handleScan = async () => {
-    if (!searchQuery.trim()) {
+  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      
+      // Show message that image search is in development
       toast({
-        title: "Please enter a Product ID",
-        description: "Enter a valid product ID or scan QR code",
+        title: "Image uploaded! 📸",
+        description: "Visual product search will analyze the image to find matching products (Coming soon)",
+      });
+    }
+  };
+
+  const handleScan = async () => {
+    if (!searchQuery.trim() && !selectedImage) {
+      toast({
+        title: "Please provide input",
+        description: "Enter a product ID, scan QR code, or upload an image",
         variant: "destructive",
+      });
+      return;
+    }
+
+    // If image is selected, show coming soon message
+    if (selectedImage && !searchQuery.trim()) {
+      toast({
+        title: "Visual Search Coming Soon",
+        description: "Image-based product search is under development. Please use Product ID for now.",
       });
       return;
     }
@@ -237,8 +268,60 @@ const Scanner = () => {
                     )}
                   </Button>
                 </div>
+                
+                {/* Image Upload Section */}
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground font-mono">OR</span>
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center gap-4">
+                  <label htmlFor="image-upload" className="cursor-pointer">
+                    <div className="flex flex-col items-center gap-2 p-6 border-2 border-dashed border-primary/20 rounded-lg hover:border-primary/40 transition-colors">
+                      {imagePreview ? (
+                        <img 
+                          src={imagePreview} 
+                          alt="Product preview" 
+                          className="w-32 h-32 object-cover rounded-lg"
+                        />
+                      ) : (
+                        <>
+                          <div className="p-3 bg-primary/10 rounded-full">
+                            <Camera className="h-6 w-6 text-primary" />
+                          </div>
+                          <p className="font-heading text-sm">UPLOAD PRODUCT IMAGE</p>
+                          <p className="text-xs text-muted-foreground">Take a photo or select from gallery</p>
+                        </>
+                      )}
+                    </div>
+                    <input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageUpload}
+                      className="hidden"
+                    />
+                  </label>
+                  {imagePreview && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setSelectedImage(null);
+                        setImagePreview(null);
+                      }}
+                    >
+                      Remove Image
+                    </Button>
+                  )}
+                </div>
+                
                 <p className="text-center text-sm text-muted-foreground">
-                  Tip: You can also scan QR codes on products for instant verification
+                  Scan QR codes, enter product IDs, or upload images for instant verification
                 </p>
               </div>
             </CardContent>
@@ -247,6 +330,18 @@ const Scanner = () => {
           {/* Scanned Product Details */}
           {scannedProduct && (
             <Card className="bg-card border-border overflow-hidden">
+              {scannedProduct.image_url && (
+                <div className="w-full h-64 overflow-hidden bg-secondary">
+                  <img 
+                    src={scannedProduct.image_url} 
+                    alt={scannedProduct.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
               <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5">
                 <div className="flex items-start justify-between">
                   <div>
