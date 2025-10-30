@@ -155,6 +155,91 @@
   }
 }
 
+/* F1 Racing Special Effects */
+@layer utilities {
+  /* Racing Grid Background */
+  .f1-grid-bg {
+    background-image: 
+      repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 40px,
+        hsla(0, 96%, 44%, 0.1) 40px,
+        hsla(0, 96%, 44%, 0.1) 42px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent 40px,
+        hsla(0, 96%, 44%, 0.1) 40px,
+        hsla(0, 96%, 44%, 0.1) 42px
+      );
+  }
+
+  /* F1 Text Styles */
+  .f1-title {
+    background: linear-gradient(135deg, hsl(0 96% 44%), hsl(0 100% 60%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+  }
+
+  /* Racing Button Styles */
+  .f1-button {
+    background: linear-gradient(135deg, hsl(0 96% 44%), hsl(0 100% 35%));
+    border: 2px solid hsl(0 96% 44%);
+    box-shadow: 
+      0 0 20px hsla(0 96% 44% / 0.3),
+      inset 0 1px 0 hsla(0 100% 100% / 0.2);
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 0.1em;
+    transition: all 0.3s;
+  }
+
+  .f1-button:hover {
+    background: linear-gradient(135deg, hsl(0 100% 50%), hsl(0 100% 40%));
+    box-shadow: 
+      0 0 30px hsla(0 96% 44% / 0.5),
+      inset 0 1px 0 hsla(0 100% 100% / 0.3);
+    transform: translateY(-2px);
+  }
+
+  /* Racing Card Style */
+  .f1-card {
+    background: linear-gradient(135deg, hsla(240 10% 12% / 0.95), hsla(240 14% 8% / 0.95));
+    border: 1px solid hsla(0 96% 44% / 0.2);
+    box-shadow: 
+      0 0 30px hsla(0 96% 44% / 0.1),
+      0 10px 40px hsla(0 0% 0% / 0.4);
+  }
+
+  /* Speed Lines Effect */
+  .speed-lines {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .speed-lines::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsla(0 96% 44% / 0.4),
+      transparent
+    );
+    animation: speed-slide 3s linear infinite;
+  }
+}
+
 /* F1 Racing Animations */
 @layer utilities {
   @keyframes racing-pulse {

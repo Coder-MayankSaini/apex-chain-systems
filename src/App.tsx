@@ -11,7 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import SupplyChain from "./pages/SupplyChain";
 import Scanner from "./pages/Scanner";
 import Analytics from "./pages/Analytics";
-import Authenticate from "./pages/Authenticate";
+import AuthenticateF1 from "@/pages/AuthenticateF1";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,7 +31,7 @@ const App = () => (
             <Route path="/supply-chain" element={<SupplyChain />} />
             <Route path="/scanner" element={<Scanner />} />
             <Route path="/analytics" element={<Analytics />} />
-            <Route path="/authenticate" element={<Authenticate />} />
+          <Route path="/authenticate" element={<AuthenticateF1 />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
