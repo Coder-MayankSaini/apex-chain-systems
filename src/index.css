@@ -1,0 +1,216 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* F1 Racing Design System - All colors MUST be HSL */
+
+@layer base {
+  :root {
+    /* F1 Racing Brand Colors */
+    --f1-racing-red: 0 96% 44%;
+    --f1-racing-red-light: 0 100% 55%;
+    --f1-carbon-black: 240 14% 8%;
+    --f1-carbon-dark: 240 10% 4%;
+    --f1-silver: 0 0% 76%;
+    --f1-silver-light: 0 0% 90%;
+    
+    /* Status Flag Colors */
+    --f1-flag-green: 160 100% 41%;
+    --f1-flag-yellow: 45 100% 50%;
+    --f1-flag-red: 0 100% 50%;
+    --f1-flag-checkered: 0 0% 0%;
+    
+    /* Background System */
+    --background: 240 14% 8%;
+    --foreground: 0 0% 98%;
+    
+    /* Racing UI Elements */
+    --card: 240 10% 12%;
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 240 10% 10%;
+    --popover-foreground: 0 0% 98%;
+    
+    --primary: 0 96% 44%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 240 10% 18%;
+    --secondary-foreground: 0 0% 98%;
+    
+    --muted: 240 10% 16%;
+    --muted-foreground: 0 0% 60%;
+    
+    --accent: 0 96% 44%;
+    --accent-foreground: 0 0% 100%;
+    
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 240 10% 20%;
+    --input: 240 10% 18%;
+    --ring: 0 96% 44%;
+    
+    --radius: 0.75rem;
+    
+    /* Racing Gradients */
+    --gradient-racing: linear-gradient(135deg, hsl(0 96% 44%), hsl(0 100% 30%));
+    --gradient-pit: linear-gradient(180deg, hsl(240 10% 12%), hsl(240 10% 8%));
+    --gradient-speed: linear-gradient(90deg, hsl(160 100% 41%), hsl(45 100% 50%), hsl(0 96% 44%));
+    --gradient-carbon: linear-gradient(135deg, hsl(240 14% 8%), hsl(240 10% 12%));
+    
+    /* Racing Shadows */
+    --shadow-racing: 0 0 30px hsla(0 96% 44% / 0.4);
+    --shadow-speed: 0 8px 32px hsla(0 96% 44% / 0.3);
+    --shadow-pit: 0 4px 16px hsla(0 0% 0% / 0.6);
+    --shadow-glow: 0 0 50px hsla(0 96% 44% / 0.5);
+
+    /* Sidebar System - F1 Pit Crew Theme */
+    --sidebar-background: 240 10% 10%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 0 96% 44%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 10% 16%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 240 10% 18%;
+    --sidebar-ring: 0 96% 44%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-body;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-heading tracking-wide;
+  }
+}
+
+/* F1 Racing Typography */
+@layer utilities {
+  .font-heading {
+    font-family: 'Orbitron', monospace;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  
+  .font-body {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+  
+  /* Racing Gradients */
+  .bg-racing-gradient {
+    background: var(--gradient-racing);
+  }
+  
+  .bg-carbon-gradient {
+    background: var(--gradient-carbon);
+  }
+  
+  .bg-speed-gradient {
+    background: var(--gradient-speed);
+  }
+  
+  /* Racing Effects */
+  .shadow-racing {
+    box-shadow: var(--shadow-racing);
+  }
+  
+  .shadow-speed {
+    box-shadow: var(--shadow-speed);
+  }
+  
+  .shadow-glow {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  /* Racing Stripes */
+  .racing-stripes {
+    background-image: repeating-linear-gradient(
+      45deg,
+      hsl(var(--f1-racing-red)) 0px,
+      hsl(var(--f1-racing-red)) 10px,
+      transparent 10px,
+      transparent 20px
+    );
+  }
+  
+  /* Checkered Pattern */
+  .checkered-pattern {
+    background-image: 
+      linear-gradient(45deg, hsl(0 0% 10%) 25%, transparent 25%),
+      linear-gradient(-45deg, hsl(0 0% 10%) 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, hsl(0 0% 10%) 75%),
+      linear-gradient(-45deg, transparent 75%, hsl(0 0% 10%) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+  }
+}
+
+/* F1 Racing Animations */
+@layer utilities {
+  @keyframes racing-pulse {
+    0%, 100% {
+      box-shadow: 0 0 20px hsla(0 96% 44% / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 40px hsla(0 96% 44% / 0.6);
+    }
+  }
+  
+  @keyframes speed-slide {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
+  }
+  
+  @keyframes pit-timer {
+    0% {
+      width: 100%;
+      background: hsl(var(--f1-flag-green));
+    }
+    50% {
+      width: 50%;
+      background: hsl(var(--f1-flag-yellow));
+    }
+    100% {
+      width: 0%;
+      background: hsl(var(--f1-racing-red));
+    }
+  }
+  
+  @keyframes checkered-wave {
+    0%, 100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    25% {
+      transform: translateY(-10px) rotate(5deg);
+    }
+    75% {
+      transform: translateY(10px) rotate(-5deg);
+    }
+  }
+  
+  .animate-racing-pulse {
+    animation: racing-pulse 4s ease-in-out infinite;
+  }
+  
+  .animate-speed-slide {
+    animation: speed-slide 8s linear infinite;
+  }
+  
+  .animate-checkered-wave {
+    animation: checkered-wave 0.6s ease-in-out;
+  }
+}
