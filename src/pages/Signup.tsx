@@ -76,9 +76,9 @@ const Signup = () => {
               <Trophy className="h-12 w-12 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-3xl font-heading">JOIN THE GRID</CardTitle>
+          <CardTitle className="text-3xl font-heading">CREATE ACCOUNT</CardTitle>
           <CardDescription className="font-mono">
-            Create your racing chain account
+            Join the Apex Chain supply chain network
           </CardDescription>
         </CardHeader>
         
@@ -86,12 +86,12 @@ const Signup = () => {
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="brandName" className="font-heading text-sm">
-                BRAND NAME
+                ORGANIZATION NAME
               </Label>
               <Input
                 id="brandName"
                 type="text"
-                placeholder="Ferrari Racing Team"
+                placeholder="Your company or organization name"
                 value={formData.brandName}
                 onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
                 required
@@ -101,17 +101,25 @@ const Signup = () => {
             
             <div className="space-y-2">
               <Label htmlFor="brandType" className="font-heading text-sm">
-                BRAND TYPE
+                ACCOUNT TYPE
               </Label>
               <Select onValueChange={(value) => setFormData({ ...formData, brandType: value })} required>
                 <SelectTrigger className="bg-secondary border-border focus:border-primary">
-                  <SelectValue placeholder="Select your category" />
+                  <SelectValue placeholder="Select your account type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="f1-team">F1 Team</SelectItem>
-                  <SelectItem value="automotive">Automotive Manufacturer</SelectItem>
-                  <SelectItem value="merchandise">Merchandise Retailer</SelectItem>
-                  <SelectItem value="event-organizer">Event Organizer</SelectItem>
+                  <SelectItem value="business">
+                    <div className="space-y-1">
+                      <div className="font-semibold">Business Account</div>
+                      <div className="text-xs text-muted-foreground">For manufacturers, event organizers, and suppliers</div>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="scanner">
+                    <div className="space-y-1">
+                      <div className="font-semibold">Scanner Account</div>
+                      <div className="text-xs text-muted-foreground">For viewing NFTs and automotive part details</div>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>

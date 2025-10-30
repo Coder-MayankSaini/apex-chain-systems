@@ -17,12 +17,18 @@ import {
   CheckCircle2, 
   Clock,
   AlertCircle,
+<<<<<<< HEAD
   QrCode 
+=======
+  QrCode,
+  Search 
+>>>>>>> 5534f50e146b09b82280452e28755909134377a6
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
   const [user, setUser] = useState<User | null>(null);
+  const [userMetadata, setUserMetadata] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showIssueTicket, setShowIssueTicket] = useState(false);
   const navigate = useNavigate();
@@ -35,6 +41,7 @@ const Dashboard = () => {
         navigate("/login");
       } else {
         setUser(session.user);
+        setUserMetadata(session.user.user_metadata);
         setLoading(false);
       }
     });
@@ -196,15 +203,18 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Quick Actions */}
+            {/* Quick Actions - Conditional based on account type */}
             <Card className="bg-card border-border">
               <CardHeader>
                 <CardTitle className="font-heading">QUICK ACTIONS</CardTitle>
                 <CardDescription className="font-mono">
-                  Start your race operations
+                  {userMetadata?.brand_type === "scanner" 
+                    ? "Scan and verify products" 
+                    : "Start your race operations"}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
+<<<<<<< HEAD
                 <Button 
                   className="w-full justify-start font-heading" 
                   variant="outline"
@@ -245,6 +255,77 @@ const Dashboard = () => {
                   <QrCode className="h-4 w-4 mr-2" />
                   Public Verify
                 </Button>
+=======
+                {userMetadata?.brand_type === "scanner" ? (
+                  // Scanner Account Actions
+                  <>
+                    <Button 
+                      className="w-full justify-start font-heading" 
+                      variant="outline"
+                      onClick={() => navigate("/scanner")}
+                    >
+                      <QrCode className="h-4 w-4 mr-2" />
+                      Scan Product
+                    </Button>
+                    <Button 
+                      className="w-full justify-start font-heading" 
+                      variant="outline"
+                      onClick={() => navigate("/scanner")}
+                    >
+                      <Search className="h-4 w-4 mr-2" />
+                      Search Products
+                    </Button>
+                    <Button 
+                      className="w-full justify-start font-heading" 
+                      variant="outline"
+                      onClick={() => navigate("/scanner")}
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      Verify Authenticity
+                    </Button>
+                    <Button 
+                      className="w-full justify-start font-heading" 
+                      variant="outline"
+                      onClick={() => navigate("/analytics")}
+                    >
+                      <TrendingUp className="h-4 w-4 mr-2" />
+                      View Analytics
+                    </Button>
+                  </>
+                ) : (
+                  // Business Account Actions
+                  <>
+                    <Button 
+                      className="w-full justify-start font-heading" 
+                      variant="outline"
+                      onClick={() => navigate("/supply-chain")}
+                    >
+                      <Truck className="h-4 w-4 mr-2" />
+                      Track Shipment
+                    </Button>
+                    <Button 
+                      className="w-full justify-start font-heading" 
+                      variant="outline"
+                      onClick={() => navigate("/supply-chain")}
+                    >
+                      <Shield className="h-4 w-4 mr-2" />
+                      Verify Product
+                    </Button>
+                    <Button className="w-full justify-start font-heading" variant="outline">
+                      <Ticket className="h-4 w-4 mr-2" />
+                      Issue Ticket
+                    </Button>
+                    <Button 
+                      className="w-full justify-start font-heading" 
+                      variant="outline"
+                      onClick={() => navigate("/supply-chain")}
+                    >
+                      <Package className="h-4 w-4 mr-2" />
+                      Add Product
+                    </Button>
+                  </>
+                )}
+>>>>>>> 5534f50e146b09b82280452e28755909134377a6
               </CardContent>
             </Card>
           </div>
@@ -266,9 +347,11 @@ const Dashboard = () => {
                     <Button 
                       size="sm" 
                       className="font-heading"
-                      onClick={() => navigate("/supply-chain")}
+                      onClick={() => navigate(
+                        userMetadata?.brand_type === "scanner" ? "/scanner" : "/supply-chain"
+                      )}
                     >
-                      VIEW FULL CHAIN
+                      {userMetadata?.brand_type === "scanner" ? "SCAN PRODUCTS" : "VIEW FULL CHAIN"}
                     </Button>
                     <Button 
                       size="sm" 

@@ -77,7 +77,19 @@ export function ProductCard({ product, onUpdate }: ProductCardProps) {
 
   return (
     <>
-      <Card className="bg-card border-border hover:border-primary/50 transition-all group">
+      <Card className="bg-card border-border hover:border-primary/50 transition-all group overflow-hidden">
+        {product.image_url && (
+          <div className="w-full h-48 overflow-hidden bg-secondary">
+            <img 
+              src={product.image_url} 
+              alt={product.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              onError={(e) => {
+                (e.target as HTMLImageElement).style.display = 'none';
+              }}
+            />
+          </div>
+        )}
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex-1">
