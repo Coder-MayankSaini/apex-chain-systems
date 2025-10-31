@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import React, { useState, useEffect, useRef } from 'react';
+import { QrScanner } from '@/utils/qrScannerSetup';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +21,7 @@ import {
   Camera,
   Package
 } from 'lucide-react';
+import { NFTService } from '@/services/nftService';
 
 interface CertificateData {
   productId: string;
@@ -36,6 +37,9 @@ interface CertificateData {
 }
 
 export default function Authenticate() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [scanner, setScanner] = useState<QrScanner | null>(null);
   const [scannerActive, setScannerActive] = useState(false);
   const [manualSearch, setManualSearch] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -43,46 +47,119 @@ export default function Authenticate() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (scannerActive) {
-      initializeScanner();
-    }
     return () => {
-      const scanner = document.getElementById('qr-reader');
       if (scanner) {
-        scanner.innerHTML = '';
+        scanner.stop();
+        scanner.destroy();
       }
     };
-  }, [scannerActive]);
+  }, [scanner]);
 
-  const initializeScanner = () => {
-    const scanner = new Html5QrcodeScanner(
-      'qr-reader',
-      { 
-        fps: 10, 
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
-      },
-      false
-    );
-
-    scanner.render(
-      (decodedText) => {
-        handleQrScan(decodedText);
-        scanner.clear();
-        setScannerActive(false);
-      },
-      (error) => {
-        console.log('QR scan error:', error);
+  const startScanner = async () => {
+    if (!videoRef.current) {
+      console.error('Video element not found');
+      setError('Video element not initialized. Please refresh the page.');
+      return;
+    }
+    
+    try {
+      setError('');
+      setScannerActive(true); // Set active immediately to show video element
+      
+      // Small delay to ensure video element is rendered
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('Initializing QR Scanner...');
+      const qrScanner = new QrScanner(
+        videoRef.current,
+        (result) => {
+          console.log('Scanned:', result);
+          handleQrScan(result.data);
+          stopScanner();
+        },
+        {
+          returnDetailedScanResult: true,
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+          preferredCamera: 'environment', // Use rear camera if available
+        }
+      );
+      
+      setScanner(qrScanner);
+      console.log('Starting camera...');
+      await qrScanner.start();
+      console.log('Camera started successfully');
+    } catch (err: any) {
+      console.error('Camera error:', err);
+      let errorMessage = 'Failed to access camera. ';
+      
+      if (err.name === 'NotAllowedError') {
+        errorMessage += 'Please grant camera permissions and refresh the page.';
+      } else if (err.name === 'NotFoundError') {
+        errorMessage += 'No camera found on this device.';
+      } else if (err.name === 'NotReadableError') {
+        errorMessage += 'Camera is already in use by another application.';
+      } else if (err.name === 'OverconstrainedError') {
+        errorMessage += 'Camera constraints could not be satisfied.';
+      } else {
+        errorMessage += err.message || 'Unknown error occurred.';
       }
-    );
+      
+      setError(errorMessage);
+      setScannerActive(false);
+    }
+  };
+
+  const stopScanner = () => {
+    if (scanner) {
+      scanner.stop();
+      scanner.destroy();
+      setScanner(null);
+    }
+    setScannerActive(false);
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      setError('');
+      const result = await QrScanner.scanImage(file, {
+        returnDetailedScanResult: true,
+      });
+      handleQrScan(result.data);
+    } catch (err) {
+      console.error('Scan error:', err);
+      setError('No QR code found in the image. Please try another image.');
+    }
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleQrScan = async (data: string) => {
     try {
-      const qrData = JSON.parse(data);
-      await verifyCertificate(qrData.productId || qrData.tokenId);
+      // Try to parse as JSON first
+      let searchId = '';
+      try {
+        const qrData = JSON.parse(data);
+        searchId = qrData.productId || qrData.tokenId || '';
+      } catch {
+        // If not JSON, treat as plain text product ID
+        searchId = data;
+      }
+      
+      if (searchId) {
+        await verifyCertificate(searchId);
+      } else {
+        setError('Invalid QR code format - no product ID found');
+      }
     } catch (err) {
-      setError('Invalid QR code format');
+      console.error('QR scan error:', err);
+      setError('Failed to process QR code');
     }
   };
 
@@ -100,26 +177,38 @@ export default function Authenticate() {
     setCertificate(null);
 
     try {
-      // Simulate blockchain/database lookup
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Try to verify the product using the NFT service
+      const result = await NFTService.verifyProduct(searchId);
       
-      // Mock certificate data (in production, fetch from blockchain/database)
-      const mockCertificate: CertificateData = {
-        productId: `F1-MERCH-2024-${Math.floor(Math.random() * 1000)}`,
-        authenticityScore: 85 + Math.floor(Math.random() * 15),
-        tokenId: searchId.startsWith('#') ? searchId.slice(1) : Math.floor(Math.random() * 10000).toString(),
-        timestamp: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-        verified: true,
-        manufacturer: 'Official F1 Store',
-        owner: `0x${Array(40).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`,
-        transactionHash: `0x${Array(64).fill(0).map(() => Math.floor(Math.random() * 16).toString(16)).join('')}`,
-        detectedLabels: ['Racing', 'Formula 1', 'Official Merchandise', 'Licensed Product'],
-        logoDetected: true
-      };
+      if (!result.isAuthentic && !result.certificate) {
+        setError('Product not found. Please check the Product ID and try again.');
+        return;
+      }
 
-      setCertificate(mockCertificate);
-    } catch (err) {
-      setError('Certificate not found or invalid');
+      if (result.certificate) {
+        // Map the certificate data from the database
+        const certificateData: CertificateData = {
+          productId: result.certificate.product_id,
+          authenticityScore: result.certificate.authenticity_score || 0,
+          tokenId: result.certificate.token_id?.toString() || 'N/A',
+          timestamp: result.certificate.minted_at,
+          verified: result.isAuthentic,
+          manufacturer: 'Official F1 Store',
+          owner: result.certificate.owner_address,
+          transactionHash: result.certificate.contract_address,
+          detectedLabels: result.certificate.image_urls || [],
+          logoDetected: (result.certificate.authenticity_score || 0) >= 70
+        };
+
+        setCertificate(certificateData);
+        
+        if (!result.isAuthentic) {
+          setError(result.message);
+        }
+      }
+    } catch (err: any) {
+      console.error('Verification error:', err);
+      setError(err.message || 'Failed to verify product. Please try again.');
     } finally {
       setIsSearching(false);
     }
@@ -193,16 +282,38 @@ export default function Authenticate() {
                     <p className="text-gray-600 mb-4">
                       Scan the QR code on your F1 merchandise certificate
                     </p>
-                    <Button onClick={() => setScannerActive(true)} size="lg">
-                      <Camera className="w-4 h-4 mr-2" />
-                      Start Scanner
-                    </Button>
+                    <div className="flex gap-2 justify-center">
+                      <Button onClick={startScanner} size="lg">
+                        <Camera className="w-4 h-4 mr-2" />
+                        Start Camera
+                      </Button>
+                      <Button 
+                        onClick={() => fileInputRef.current?.click()} 
+                        size="lg" 
+                        variant="outline"
+                      >
+                        Upload QR Image
+                      </Button>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div id="qr-reader" className="mx-auto"></div>
+                    <div className="relative">
+                      <video 
+                        ref={videoRef} 
+                        className="w-full rounded-lg mx-auto"
+                        style={{ maxHeight: '400px' }}
+                      />
+                    </div>
                     <Button 
-                      onClick={() => setScannerActive(false)} 
+                      onClick={stopScanner} 
                       variant="outline" 
                       className="w-full"
                     >
@@ -371,7 +482,7 @@ export default function Authenticate() {
                 <Button
                   variant="outline"
                   className="w-full"
-                  onClick={() => window.open(`https://amoy.polygonscan.com/token/${certificate.transactionHash}`, '_blank')}
+                  onClick={() => window.open(`https://amoy.polygonscan.com/token/0x5ef281f10a2c4F4b2b83c131a0471633720a8891?a=${certificate.tokenId}`, '_blank')}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   View on Polygon Blockchain

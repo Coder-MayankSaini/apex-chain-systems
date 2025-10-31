@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import React, { useState, useEffect, useRef } from 'react';
+import { QrScanner } from '@/utils/qrScannerSetup';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,9 @@ interface CertificateData {
 }
 
 export default function AuthenticateF1() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [scanner, setScanner] = useState<QrScanner | null>(null);
   const [scannerActive, setScannerActive] = useState(false);
   const [manualSearch, setManualSearch] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -43,46 +46,93 @@ export default function AuthenticateF1() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    if (scannerActive) {
-      initializeScanner();
-    }
     return () => {
-      const scanner = document.getElementById('qr-reader');
       if (scanner) {
-        scanner.innerHTML = '';
+        scanner.stop();
+        scanner.destroy();
       }
     };
-  }, [scannerActive]);
+  }, [scanner]);
 
-  const initializeScanner = () => {
-    const scanner = new Html5QrcodeScanner(
-      'qr-reader',
-      { 
-        fps: 10, 
-        qrbox: { width: 250, height: 250 },
-        aspectRatio: 1.0
-      },
-      false
-    );
+  const startScanner = async () => {
+    if (!videoRef.current) return;
+    
+    try {
+      setError('');
+      const qrScanner = new QrScanner(
+        videoRef.current,
+        (result) => {
+          console.log('Scanned:', result);
+          handleQrScan(result.data);
+          stopScanner();
+        },
+        {
+          returnDetailedScanResult: true,
+          highlightScanRegion: true,
+          highlightCodeOutline: true,
+        }
+      );
+      
+      setScanner(qrScanner);
+      await qrScanner.start();
+      setScannerActive(true);
+    } catch (err) {
+      console.error('Camera error:', err);
+      setError('Failed to access camera. Please ensure camera permissions are granted.');
+      setScannerActive(false);
+    }
+  };
 
-    scanner.render(
-      (decodedText) => {
-        handleQrScan(decodedText);
-        scanner.clear();
-        setScannerActive(false);
-      },
-      (error) => {
-        console.log('QR scan error:', error);
-      }
-    );
+  const stopScanner = () => {
+    if (scanner) {
+      scanner.stop();
+      scanner.destroy();
+      setScanner(null);
+    }
+    setScannerActive(false);
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      setError('');
+      const result = await QrScanner.scanImage(file, {
+        returnDetailedScanResult: true,
+      });
+      handleQrScan(result.data);
+    } catch (err) {
+      console.error('Scan error:', err);
+      setError('No QR code found in the image. Please try another image.');
+    }
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
   };
 
   const handleQrScan = async (data: string) => {
     try {
-      const qrData = JSON.parse(data);
-      await verifyCertificate(qrData.productId || qrData.tokenId);
+      // Try to parse as JSON first
+      let searchId = '';
+      try {
+        const qrData = JSON.parse(data);
+        searchId = qrData.productId || qrData.tokenId || '';
+      } catch {
+        // If not JSON, treat as plain text product ID
+        searchId = data;
+      }
+      
+      if (searchId) {
+        await verifyCertificate(searchId);
+      } else {
+        setError('Invalid QR code format - no product ID found');
+      }
     } catch (err) {
-      setError('Invalid QR code format');
+      console.error('QR scan error:', err);
+      setError('Failed to process QR code');
     }
   };
 
@@ -238,20 +288,43 @@ export default function AuthenticateF1() {
                     <p className="text-gray-400 mb-4">
                       Scan the QR code on your F1® merchandise certificate
                     </p>
-                    <Button 
-                      onClick={() => setScannerActive(true)} 
-                      size="lg"
-                      className="f1-button text-white px-8 py-6 text-lg"
-                    >
-                      <Camera className="w-4 h-4 mr-2" />
-                      Start Scanner
-                    </Button>
+                    <div className="flex gap-2 justify-center">
+                      <Button 
+                        onClick={startScanner} 
+                        size="lg"
+                        className="f1-button text-white px-8 py-6 text-lg"
+                      >
+                        <Camera className="w-4 h-4 mr-2" />
+                        Start Camera
+                      </Button>
+                      <Button 
+                        onClick={() => fileInputRef.current?.click()} 
+                        size="lg" 
+                        variant="outline"
+                        className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white px-8 py-6 text-lg"
+                      >
+                        Upload QR Image
+                      </Button>
+                    </div>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div id="qr-reader" className="mx-auto rounded-lg overflow-hidden border-2 border-red-600"></div>
+                    <div className="relative">
+                      <video 
+                        ref={videoRef} 
+                        className="w-full rounded-lg mx-auto border-2 border-red-600"
+                        style={{ maxHeight: '400px' }}
+                      />
+                    </div>
                     <Button 
-                      onClick={() => setScannerActive(false)} 
+                      onClick={stopScanner} 
                       variant="outline" 
                       className="w-full border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
                     >
@@ -431,7 +504,7 @@ export default function AuthenticateF1() {
                 <Button
                   variant="outline"
                   className="w-full bg-black/50 border-red-600 text-red-500 hover:bg-red-600 hover:text-white hover:border-red-700 uppercase tracking-wider font-bold transition-all"
-                  onClick={() => window.open(`https://amoy.polygonscan.com/token/${certificate.transactionHash}`, '_blank')}
+                  onClick={() => window.open(`https://amoy.polygonscan.com/token/0x5ef281f10a2c4F4b2b83c131a0471633720a8891?a=${certificate.tokenId}`, '_blank')}
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
                   View on Polygon Blockchain
